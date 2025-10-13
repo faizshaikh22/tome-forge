@@ -48,3 +48,19 @@ QUESTION_LAYER_DISTRIBUTION = {
     "emotional": 0.15,
     "structural": 0.15,
 }
+
+# --- Book Download Settings ---
+BOOKS_TO_DOWNLOAD = {
+    "The Dawn of Day": 39955,
+    "Human, All Too Human": 38145,
+    "Thus Spoke Zarathustra": 1998,
+    "Beyond Good and Evil": 4363,
+    "The Antichrist": 19322,
+    "The WIll to Power - Book 1-3": 52914,
+    "The WIll to Power - Book 3-4": 52915,
+    "The Joyful Science": 52881,
+    "The Birth of Tragedy": 51356,
+    "Ecce Homo": 52190,
+    "Twilight of the Idols": 52263,
+    "The Genealogy of morals": 52319,
+}

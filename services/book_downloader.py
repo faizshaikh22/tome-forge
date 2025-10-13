@@ -1,5 +1,10 @@
 import requests
 import os
+import sys
+
+# Adjust path to import config from the root directory
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import config
 
 def download_books(book_map):
     """
@@ -8,11 +13,15 @@ def download_books(book_map):
     Args:
         book_map (dict): A dictionary where keys are book names and values are Project Gutenberg book IDs.
     """
+    # Get the project root directory (the parent of the current script's directory)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sources_dir = os.path.join(project_root, config.SOURCES_DIR)
+
     for name, book_id in book_map.items():
         print(f"Downloading {name}...")
         
         # Create the directory for the book
-        output_dir = os.path.join("Sources", name)
+        output_dir = os.path.join(sources_dir, name)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -37,20 +46,4 @@ def download_books(book_map):
             print(f"Error downloading {name}: {e}")
 
 if __name__ == "__main__":
-    # Example usage:
-    books_to_download = {
-        "The Dawn of Day": 39955,
-        "Human, All Too Human": 38145,
-        "Thus Spoke Zarathustra": 1998,
-        "Beyond Good and Evil": 4363,
-        "The Antichrist": 19322,
-        "The WIll to Power - Book 1-3": 52914,
-        "The WIll to Power - Book 3-4": 52915,
-        "The Joyful Science": 52881,
-        "The Birth of Tragedy": 51356,
-        "Ecce Homo": 52190,
-        "Twilight of the Idols": 52263,
-        "The Genealogy of morals": 52319
-    }
-    
-    download_books(books_to_download)
+    download_books(config.BOOKS_TO_DOWNLOAD)
