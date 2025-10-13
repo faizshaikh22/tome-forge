@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Log files
+*.log
+
+# Test files
+test.epub
+test2.epub
+
+# Generated files
+# Sources/**/output/
+# Sources/**/chapters/
+
+# Factory configuration
+.factory/

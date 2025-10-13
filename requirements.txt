@@ -1,0 +1,7 @@
+beautifulsoup4
+lxml
+gutenbergpy
+EbookLib
+requests
+python-dotenv
+openai
