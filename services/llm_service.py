@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import time
 from collections import deque
 import logging
+import config
 
 # Set up basic logging
 logging.basicConfig(
@@ -15,12 +16,6 @@ class LLMService:
     """
     A resilient service for making LLM calls with rate limiting, retries, and fallback.
     """
-
-    # Constants for rate limiting and retries
-    RATE_LIMIT = 20
-    RATE_LIMIT_PERIOD = 60  # in seconds
-    MAX_RETRIES = 3
-    INITIAL_BACKOFF = 3  # 60s / 20 req = 3s/req
 
     def __init__(self):
         """
@@ -39,11 +34,11 @@ class LLMService:
 
         # --- Client Configuration ---
         self.nim_client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
+            base_url=config.NIM_BASE_URL,
             api_key=self.nim_api_key,
         )
         self.vc_client = OpenAI(
-            base_url="https://vanchin.streamlake.ai/api/gateway/v1/endpoints",
+            base_url=config.VC_BASE_URL,
             api_key=self.vc_api_key,
         )
 
@@ -55,18 +50,8 @@ class LLMService:
         }
 
         # --- Provider Priority List (Sequential Fallback) ---
-        nim_models = [
-            "openai/gpt-oss-120b",
-            "moonshotai/kimi-k2-instruct-0905",
-            "deepseek-ai/deepseek-v3.1-terminus",
-            "openai/gpt-oss-20b",
-            "deepseek-ai/deepseek-r1-0528",
-            "mistralai/mistral-nemotron",
-            "nvidia/llama-3.1-nemotron-ultra-253b-v1",
-        ]
-
         self.providers = []
-        for model in nim_models:
+        for model in config.NIM_MODELS:
             self.providers.append(
                 {
                     "name": f"NIM-{model.split('/')[1]}",  # e.g., NIM-gpt-oss-120b
@@ -81,7 +66,7 @@ class LLMService:
             {
                 "name": "VC",
                 "client": self.vc_client,
-                "model": "ep-8jycqu-1760113893946547399",
+                "model": config.VC_MODEL,
                 "queue": self.timestamp_queues["vc_client"],
             }
         )
@@ -94,11 +79,11 @@ class LLMService:
         timestamps = provider["queue"]  # Use the shared queue for the client
 
         # Remove timestamps older than the rate limit period
-        while timestamps and timestamps[0] < now - self.RATE_LIMIT_PERIOD:
+        while timestamps and timestamps[0] < now - config.RATE_LIMIT_PERIOD:
             timestamps.popleft()
 
-        if len(timestamps) >= self.RATE_LIMIT:
-            wait_time = timestamps[0] - (now - self.RATE_LIMIT_PERIOD)
+        if len(timestamps) >= config.RATE_LIMIT:
+            wait_time = timestamps[0] - (now - config.RATE_LIMIT_PERIOD)
             logging.warning(
                 f"Rate limit for {provider['name']}'s client reached. "
                 f"Waiting for {wait_time:.2f} seconds."
@@ -121,7 +106,7 @@ class LLMService:
             response = provider["client"].chat.completions.create(
                 model=provider["model"],
                 messages=messages,
-                temperature=0.65,
+                temperature=config.TEMPERATURE,
             )
             return {
                 "content": response.choices[0].message.content,
@@ -143,7 +128,7 @@ class LLMService:
             Dictionary containing the LLM response or raises an exception if all fail.
         """
         for provider in self.providers:
-            for attempt in range(self.MAX_RETRIES):
+            for attempt in range(config.MAX_RETRIES):
                 result = self._make_request(provider, messages)
                 if result:
                     logging.info(
@@ -151,8 +136,8 @@ class LLMService:
                     )
                     return result
 
-                if attempt < self.MAX_RETRIES - 1:
-                    backoff_time = self.INITIAL_BACKOFF * (2**attempt)
+                if attempt < config.MAX_RETRIES - 1:
+                    backoff_time = config.INITIAL_BACKOFF * (2**attempt)
                     logging.warning(
                         f"Attempt {attempt + 1} for {provider['name']} failed. "
                         f"Retrying in {backoff_time} seconds."
@@ -160,7 +145,7 @@ class LLMService:
                     time.sleep(backoff_time)
 
             logging.error(
-                f"All {self.MAX_RETRIES} retries for {provider['name']} failed. Moving to next provider."
+                f"All {config.MAX_RETRIES} retries for {provider['name']} failed. Moving to next provider."
             )
 
         raise Exception(
