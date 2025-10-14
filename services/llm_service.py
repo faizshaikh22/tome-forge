@@ -1,9 +1,11 @@
-from openai import OpenAI
+import logging
 import os
-from dotenv import load_dotenv
 import time
 from collections import deque
-import logging
+
+from dotenv import load_dotenv
+from openai import OpenAI
+
 import config
 
 # Set up basic logging
@@ -13,14 +15,24 @@ logging.basicConfig(
 
 
 class LLMService:
-    """
-    A resilient service for making LLM calls with rate limiting, retries, and fallback.
+    """A resilient service for making LLM calls.
+
+    This service manages API calls to multiple LLM providers. It includes
+    features like rate limiting, exponential backoff retries, and a sequential
+    fallback mechanism to ensure high availability.
+
+    Attributes:
+        nim_api_key: The API key for the NIM provider.
+        vc_api_key: The API key for the VC provider.
+        nim_client: An OpenAI client instance configured for the NIM provider.
+        vc_client: An OpenAI client instance configured for the VC provider.
+        timestamp_queues: A dictionary of deques to track request timestamps
+            for rate limiting.
+        providers: A list of provider configurations to try in sequence.
     """
 
     def __init__(self):
-        """
-        Initialize the LLM service with multiple clients and rate-limiting queues.
-        """
+        """Initializes the LLMService and configures clients and providers."""
         load_dotenv()
 
         # Load API keys from environment
@@ -72,8 +84,11 @@ class LLMService:
         )
 
     def _rate_limit_wait(self, provider):
-        """
-        Checks and waits if the rate limit for a provider's client is exceeded.
+        """Checks and waits if the rate limit for a provider has been exceeded.
+
+        Args:
+            provider: A dictionary containing the provider's configuration,
+                including the timestamp queue.
         """
         now = time.time()
         timestamps = provider["queue"]  # Use the shared queue for the client
@@ -94,8 +109,15 @@ class LLMService:
         timestamps.append(time.time())
 
     def _make_request(self, provider, messages):
-        """
-        Makes a single request to a provider and handles exceptions.
+        """Makes a single request to a provider and handles exceptions.
+
+        Args:
+            provider: The provider configuration dictionary.
+            messages: The list of messages to send to the LLM.
+
+        Returns:
+            A dictionary containing the response content and metadata on success,
+            or None on failure.
         """
         try:
             self._rate_limit_wait(provider)
@@ -113,19 +135,27 @@ class LLMService:
                 "provider_name": provider["name"],
                 "model_name": provider["model"],
             }
-        except Exception as e:
-            logging.error(f"Error calling {provider['name']}: {e}")
+        except OpenAI.APIError as e:
+            logging.error(f"API error calling {provider['name']}: {e}")
             return None
 
     def chat_completion(self, messages):
-        """
-        Makes a resilient chat completion request, handling retries and sequential fallbacks.
+        """Makes a resilient chat completion request.
+
+        This method attempts to get a chat completion from the configured
+        providers in sequence. It handles rate limiting, retries with
+        exponential backoff, and falls back to the next provider if a request
+        fails after all retries.
 
         Args:
-            messages: List of message dictionaries with role and content.
+            messages: A list of message dictionaries, each with 'role' and
+                'content' keys, to be sent to the LLM.
 
         Returns:
-            Dictionary containing the LLM response or raises an exception if all fail.
+            A dictionary containing the LLM response content and metadata.
+
+        Raises:
+            Exception: If all LLM providers fail after all retry attempts.
         """
         for provider in self.providers:
             for attempt in range(config.MAX_RETRIES):
@@ -153,14 +183,16 @@ class LLMService:
         )
 
     def generate_text(self, prompt):
-        """
-        Generates text from a single prompt string using the resilient pipeline.
+        """Generates text from a single prompt string.
+
+        This is a convenience method that wraps the `chat_completion` method
+        for use cases where only a single user prompt is needed.
 
         Args:
             prompt: The input prompt string.
 
         Returns:
-            Dictionary containing the LLM response.
+            A dictionary containing the LLM response content and metadata.
         """
         messages = [{"role": "user", "content": prompt}]
         return self.chat_completion(messages)
@@ -176,5 +208,5 @@ if __name__ == "__main__":
         result = service.generate_text("What is morality, and what is its origin?")
         logging.info("LLM Response:")
         print(result["content"])
-    except Exception as e:
+    except OpenAI.APIError as e:
         logging.error(f"Failed to get response from any LLM provider: {e}")

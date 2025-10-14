@@ -1,6 +1,7 @@
 # utils/file_utils.py
-import os
 import logging
+import os
+
 import config
 
 # Set up basic logging
@@ -10,8 +11,14 @@ logging.basicConfig(
 
 
 def find_first_book_with_chapters(sources_dir=config.SOURCES_DIR):
-    """
-    Find the first book in the sources directory that has chapters available.
+    """Finds the first book with extracted chapter files.
+
+    Args:
+        sources_dir: The directory containing book subdirectories.
+
+    Returns:
+        A tuple containing (book_path, book_name, chapter_files) if a
+        book with chapters is found, otherwise (None, None, None).
     """
     for book_name in os.listdir(sources_dir):
         book_path = os.path.join(sources_dir, book_name)
@@ -27,8 +34,16 @@ def find_first_book_with_chapters(sources_dir=config.SOURCES_DIR):
 
 
 def get_author_from_book_name(book_name):
-    """
-    Extract author name from book directory name.
+    """Extracts an author's name from a book's directory name.
+
+    Assumes a format like "Book Title by Author".
+
+    Args:
+        book_name: The name of the book's directory.
+
+    Returns:
+        The extracted author name as a string, or "Unknown Author" if the
+        pattern is not found.
     """
     if " by " in book_name:
         parts = book_name.split(" by ")
@@ -38,7 +53,13 @@ def get_author_from_book_name(book_name):
 
 
 def load_completed_chapters():
-    """Reads the progress file and returns a set of completed JSON paths."""
+    """Reads the progress log file to determine which chapters are complete.
+
+    Returns:
+        A set of strings, where each string is the JSON file path of a
+        chapter that has already been successfully processed. Returns an
+        empty set if the progress file does not exist.
+    """
     if not os.path.exists(config.PROGRESS_FILE):
         return set()
     with open(config.PROGRESS_FILE, "r", encoding="utf-8") as f:
@@ -46,14 +67,27 @@ def load_completed_chapters():
 
 
 def log_completed_chapter(json_path):
-    """Appends a successfully completed chapter's JSON path to the progress file."""
+    """Appends a chapter's JSON path to the progress log file.
+
+    Args:
+        json_path: The file path of the successfully generated JSON file.
+    """
     with open(config.PROGRESS_FILE, "a", encoding="utf-8") as f:
         f.write(json_path + "\n")
 
 
 def get_chapter_stats(sources_dir: str = config.SOURCES_DIR) -> list[dict]:
-    """
-    Gathers statistics for every chapter file.
+    """Gathers statistics for every chapter file in the sources directory.
+
+    This function scans all book subdirectories to find chapter text files
+    and calculates statistics for each one, such as its word count.
+
+    Args:
+        sources_dir: The root directory containing book subdirectories.
+
+    Returns:
+        A list of dictionaries, where each dictionary contains the path,
+        book name, filename, and word count for a single chapter.
     """
     if not os.path.isdir(sources_dir):
         logging.error(f"Sources directory not found at: {sources_dir}")

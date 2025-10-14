@@ -1,19 +1,28 @@
-import ebooklib
-from ebooklib import epub
-from bs4 import BeautifulSoup
+import logging
 import os
 import re
-import logging
+
+from bs4 import BeautifulSoup
+import ebooklib
+from ebooklib import epub
 
 class EpubParserService:
-    """A service to parse EPUB files and extract chapters."""
+    """A service to parse EPUB files and extract chapters as plain text.
+
+    This service scans a source directory for book subdirectories, finds an
+    'book.epub' file within each, and extracts its content into individual
+
+    chapter text files.
+
+    Attributes:
+        sources_dir: The root directory containing book subfolders to process.
+    """
 
     def __init__(self, sources_dir: str):
-        """
-        Initializes the service with the path to the sources directory.
+        """Initializes the service with the path to the sources directory.
 
         Args:
-            sources_dir (str): The path to the directory containing book subfolders.
+            sources_dir: The path to the directory containing book subfolders.
         """
         self.sources_dir = sources_dir
         self._setup_logging()
@@ -24,16 +33,26 @@ class EpubParserService:
                             format='%(asctime)s - %(levelname)s - %(message)s')
 
     def _sanitize_filename(self, name: str) -> str:
-        """
-        Takes a string and returns a sanitized version suitable for a filename.
+        """Sanitizes a string to be a valid filename.
+
+        Args:
+            name: The input string to sanitize.
+
+        Returns:
+            A sanitized string suitable for use as a filename.
         """
         name = re.sub(r'[^\w\s-]', '', name).strip()
         name = re.sub(r'[-\s]+', '_', name)
         return name.lower()[:100]
 
     def _build_toc_map(self, toc_items):
-        """
-        Recursively builds a map from a content file's href to its TOC title.
+        """Recursively builds a map from content href to Table of Contents title.
+
+        Args:
+            toc_items: A list or tuple of items from an ebooklib book's TOC.
+
+        Returns:
+            A dictionary mapping cleaned chapter file hrefs to their titles.
         """
         href_map = {}
         for item in toc_items:
@@ -49,8 +68,12 @@ class EpubParserService:
         return href_map
 
     def _extract_and_save_chapters(self, book, chapters_dir: str):
-        """
-        Extracts plain text from each chapter and saves it to a .txt file.
+        """Extracts chapter content and saves it to text files.
+
+        Args:
+            book: An opened ebooklib.epub.EpubBook object.
+            chapters_dir: The directory where the chapter .txt files will be
+                saved.
         """
         logging.info(f"Extracting chapters to '{chapters_dir}'")
         toc_map = self._build_toc_map(book.toc)
@@ -75,7 +98,13 @@ class EpubParserService:
                 logging.error(f"Could not write to file {file_path}: {e}")
 
     def process_books(self):
-        """Crawls the sources directory and processes each book."""
+        """Crawls the sources directory and processes all found books.
+
+        For each subdirectory in the main sources directory, this method
+        looks for a 'book.epub' file. If found, and if chapters have not
+        already been extracted, it orchestrates the parsing and saving of
+        the chapter content.
+        """
         logging.info(f"Starting to process books in '{self.sources_dir}'")
         for book_name in os.listdir(self.sources_dir):
             book_dir = os.path.join(self.sources_dir, book_name)
@@ -100,7 +129,7 @@ class EpubParserService:
                 book = epub.read_epub(epub_path)
                 self._extract_and_save_chapters(book, chapters_dir)
                 logging.info(f"Finished processing '{book_name}'.")
-            except Exception as e:
+            except ebooklib.epub.EpubException as e:
                 logging.error(f"Failed to process '{book_name}': {e}")
 
 if __name__ == '__main__':

@@ -1,17 +1,22 @@
-import requests
 import os
 import sys
+
+import requests
 
 # Adjust path to import config from the root directory
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import config
 
 def download_books(book_map):
-    """
-    Downloads epub files from Project Gutenberg for a given map of books.
+    """Downloads EPUB files from Project Gutenberg.
+
+    Iterates through a dictionary of book titles and their Project Gutenberg
+    IDs, downloads the EPUB file for each, and saves it to a structured
+    directory.
 
     Args:
-        book_map (dict): A dictionary where keys are book names and values are Project Gutenberg book IDs.
+        book_map: A dictionary where keys are string book titles and values are
+            integer Project Gutenberg book IDs.
     """
     # Get the project root directory (the parent of the current script's directory)
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

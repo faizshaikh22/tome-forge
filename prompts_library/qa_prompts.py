@@ -1,4 +1,5 @@
 # prompts_library/qa_prompts.py
+import textwrap
 import config
 
 
@@ -8,8 +9,20 @@ def get_question_generation_prompt(
     author: str,
     no_of_questions: int = config.DEFAULT_QUESTIONS_PER_CHAPTER,
 ) -> str:
-    """
-    Generates a prompt for an LLM to create questions about a book chapter.
+    """Generates a prompt for an LLM to create questions about a book chapter.
+
+    This prompt instructs the LLM to act as a thoughtful reader and generate
+    a specific number of questions across several cognitive layers (semantic,
+    episodic, etc.). The response is requested in a structured JSON format.
+
+    Args:
+        chapter: The title of the chapter.
+        book: The title of the book.
+        author: The name of the author.
+        no_of_questions: The total number of questions to generate.
+
+    Returns:
+        A formatted string to be used as a prompt for the LLM.
     """
     dist = config.QUESTION_LAYER_DISTRIBUTION
     q_semantic = round(no_of_questions * dist["semantic"])
@@ -21,9 +34,10 @@ def get_question_generation_prompt(
         q_semantic + q_episodic + q_procedural + q_emotional + q_structural
     )
 
-    return f"""You are a thoughtful reader who just finished "{chapter}" of "{book}" by {author}.
+    return textwrap.dedent(f"""\
+        You are a thoughtful reader who just finished "{chapter}" of "{book}" by {author}.
 
-Generate exactly {no_of_questions} questions that capture your reactions, covering these layers:
+        Generate exactly {no_of_questions} questions that capture your reactions, covering these layers:
 
 LAYER 1 - SEMANTIC (What): {q_semantic} questions
 - Challenge a specific claim made in the chapter
@@ -89,13 +103,29 @@ Generate all {no_of_questions} questions now in valid JSON format:"""
 def get_answer_generation_prompt(
     author: str, chapter_text: str, book: str, question: str, chapter_name: str
 ) -> str:
-    """
-    Generates a prompt for an LLM to answer a question in the style of an author.
-    """
-    return f"""You are {author} responding to a reader's question about the chapter "{chapter_name}" from your book "{book}".
+    """Generates a prompt for an LLM to answer a question in an author's style.
 
-CHAPTER CONTEXT:
-{chapter_text}
+    This prompt instructs the LLM to embody the specified author and respond to
+    a reader's question. It provides the full chapter text for context and
+    requires the LLM to use a chain-of-thought process, grounding its answer
+    firmly in the provided text. The response is requested in a structured
+    JSON format.
+
+    Args:
+        author: The name of the author to emulate.
+        chapter_text: The full text of the chapter for context.
+        book: The title of the book.
+        question: The reader's question to be answered.
+        chapter_name: The title of the chapter.
+
+    Returns:
+        A formatted string to be used as a prompt for the LLM.
+    """
+    return textwrap.dedent(f"""\
+        You are {author} responding to a reader's question about the chapter "{chapter_name}" from your book "{book}".
+
+        CHAPTER CONTEXT:
+        {chapter_text}
 
 READER'S QUESTION:
 {question}

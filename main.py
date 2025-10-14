@@ -1,21 +1,37 @@
-import os
 import json
-from services.llm_service import LLMService
+import os
+
+import config
 from pipelines.qa_generation import generate_qa_pairs_for_chapter
+from services.llm_service import LLMService
 from utils.file_utils import (
+    get_author_from_book_name,
+    get_chapter_stats,
     load_completed_chapters,
     log_completed_chapter,
-    get_chapter_stats,
-    get_author_from_book_name,
 )
-import config
 
 
 
 
 def plan_generation_workload(all_chapter_stats, completed_chapters_set):
-    """
-    Analyzes chapters and creates a plan for Q&A generation.
+    """Analyzes chapter statistics to create a Q&A generation plan.
+
+    This function calculates the number of questions to generate for each chapter
+    based on its word count relative to the average. It filters out chapters
+    that have already been completed.
+
+    Args:
+        all_chapter_stats: A list of dictionaries, where each dictionary contains
+            statistics for a chapter (e.g., path, word_count).
+        completed_chapters_set: A set of JSON file paths for chapters that
+            have already been processed and saved.
+
+    Returns:
+        A list of dictionaries, representing the generation plan. Each dictionary
+        extends the original chapter stats with 'json_path' and 'num_questions'
+        to generate for that chapter. Returns an empty list if no chapters
+        are found.
     """
     if not all_chapter_stats:
         print("No chapters found. Exiting.")
@@ -55,8 +71,17 @@ def plan_generation_workload(all_chapter_stats, completed_chapters_set):
 
 
 def execute_generation_workload(generation_plan, service):
-    """
-    Executes the Q&A generation plan.
+    """Executes the Q&A generation plan for each chapter.
+
+    Iterates through the generation plan and calls the Q&A generation
+    pipeline for each chapter. It handles reading the chapter text,
+    calling the LLM service, and logging completion.
+
+    Args:
+        generation_plan: A list of dictionaries, where each dictionary
+            represents a chapter to be processed and contains all necessary
+            information (e.g., file path, number of questions).
+        service: An instance of the LLMService to be used for generating text.
     """
     total_chapters = len(generation_plan)
     for i, chapter_info in enumerate(generation_plan):
@@ -88,13 +113,18 @@ def execute_generation_workload(generation_plan, service):
             log_completed_chapter(chapter_info["json_path"])
             print("  Successfully completed and logged chapter.")
 
+        except IOError as e:
+            print(f"  An IO error occurred for chapter {chapter_info['filename']}: {e}")
         except Exception as e:
-            print(f"  A critical error occurred during Q&A generation for this chapter: {e}")
+            print(f"  An unexpected error occurred during Q&A generation for {chapter_info['filename']}: {e}")
 
 
 def main():
-    """
-    Main orchestration script.
+    """Main orchestration script to generate Q&A pairs for all books.
+
+    This script serves as the entry point to the Q&A generation pipeline.
+    It initializes the LLM service, loads progress, plans the generation
+    workload by analyzing all chapters, and then executes the plan.
     """
     service = LLMService()
     completed_chapters_set = load_completed_chapters()

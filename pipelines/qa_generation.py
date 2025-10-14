@@ -1,9 +1,10 @@
 # pipelines/qa_generation.py
-import os
 import json
+import os
+
+import config
 from prompts_library import qa_prompts
 from utils import parsing_utils
-import config
 
 
 def generate_qa_pairs_for_chapter(
@@ -15,8 +16,26 @@ def generate_qa_pairs_for_chapter(
     json_path: str,
     no_of_questions: int,
 ):
-    """
-    Complete, resilient pipeline to generate and save Q&A pairs for a chapter.
+    """Generates and saves a set of Q&A pairs for a single chapter.
+
+    This function orchestrates the end-to-end process for one chapter:
+    1. Loads any existing Q&A pairs if the output file already exists.
+    2. Generates a new batch of questions using the LLM.
+    3. For each new question, generates a corresponding answer in the author's
+       voice.
+    4. Appends the new Q&A pairs to the list and saves the entire set
+       back to the JSON file after each answer is generated.
+
+    Args:
+        author: The name of the author.
+        book: The title of the book.
+        chapter_name: The title of the chapter.
+        chapter_text: The full text content of the chapter.
+        llm_function: A callable (e.g., a method from LLMService) that takes a
+            prompt string and returns an LLM response dictionary.
+        json_path: The absolute path to the output JSON file where Q&A pairs
+            will be saved.
+        no_of_questions: The target number of new questions to generate.
     """
     qa_pairs = []
     if os.path.exists(json_path):
