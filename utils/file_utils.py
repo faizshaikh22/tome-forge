@@ -4,10 +4,7 @@ import os
 
 import config
 
-# Set up basic logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logger = logging.getLogger(__name__)
 
 
 def find_first_book_with_chapters(sources_dir=config.SOURCES_DIR):
@@ -90,7 +87,7 @@ def get_chapter_stats(sources_dir: str = config.SOURCES_DIR) -> list[dict]:
         book name, filename, and word count for a single chapter.
     """
     if not os.path.isdir(sources_dir):
-        logging.error(f"Sources directory not found at: {sources_dir}")
+        logger.error(f"Sources directory not found at: {sources_dir}")
         return []
 
     chapter_stats = []
@@ -115,7 +112,7 @@ def get_chapter_stats(sources_dir: str = config.SOURCES_DIR) -> list[dict]:
                                     }
                                 )
                         except (OSError, UnicodeDecodeError) as e:
-                            logging.error(
+                            logger.error(
                                 f"Could not read or process {chapter_full_path}: {e}"
                             )
     return chapter_stats

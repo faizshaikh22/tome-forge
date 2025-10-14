@@ -1,6 +1,9 @@
 # utils/parsing_utils.py
 import json
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 
 def parse_questions_response(llm_output: str) -> list[dict]:
@@ -24,8 +27,8 @@ def parse_questions_response(llm_output: str) -> list[dict]:
         data = json.loads(cleaned)
         return data.get("questions", [])
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON: {e}")
-        print(f"Raw output: {llm_output[:200]}...")
+        logger.error(f"Error parsing JSON: {e}")
+        logger.error(f"Raw output: {llm_output[:200]}...")
         return []
 
 
@@ -55,6 +58,6 @@ def parse_answer_response(llm_output: str) -> dict:
             "response": data.get("response", ""),
         }
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON: {e}")
-        print(f"Raw output: {llm_output[:200]}...")
+        logger.error(f"Error parsing JSON: {e}")
+        logger.error(f"Raw output: {llm_output[:200]}...")
         return {"thinking": {}, "response": ""}

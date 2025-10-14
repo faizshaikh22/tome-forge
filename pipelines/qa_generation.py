@@ -5,6 +5,9 @@ import os
 import config
 from prompts_library import qa_prompts
 from utils import parsing_utils
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def generate_qa_pairs_for_chapter(
@@ -53,7 +56,7 @@ def generate_qa_pairs_for_chapter(
     questions = parsing_utils.parse_questions_response(questions_output)
 
     if not questions:
-        print("Could not generate or parse questions. Aborting.")
+        logger.warning("Could not generate or parse questions. Aborting.")
         return
 
     for q in questions:
@@ -89,5 +92,5 @@ def generate_qa_pairs_for_chapter(
             with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(qa_pairs, f, indent=2, ensure_ascii=False)
         except IOError as e:
-            print(f"CRITICAL: Could not write to file {json_path}. Error: {e}")
+            logger.critical(f"Could not write to file {json_path}. Error: {e}")
             return

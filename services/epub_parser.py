@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import ebooklib
 from ebooklib import epub
 
+logger = logging.getLogger(__name__)
+
 class EpubParserService:
     """A service to parse EPUB files and extract chapters as plain text.
 
@@ -25,12 +27,6 @@ class EpubParserService:
             sources_dir: The path to the directory containing book subfolders.
         """
         self.sources_dir = sources_dir
-        self._setup_logging()
-
-    def _setup_logging(self):
-        """Sets up a basic logging configuration."""
-        logging.basicConfig(level=logging.INFO, 
-                            format='%(asctime)s - %(levelname)s - %(message)s')
 
     def _sanitize_filename(self, name: str) -> str:
         """Sanitizes a string to be a valid filename.
@@ -75,7 +71,7 @@ class EpubParserService:
             chapters_dir: The directory where the chapter .txt files will be
                 saved.
         """
-        logging.info(f"Extracting chapters to '{chapters_dir}'")
+        logger.info(f"Extracting chapters to '{chapters_dir}'")
         toc_map = self._build_toc_map(book.toc)
         chapters = list(book.get_items_of_type(ebooklib.ITEM_DOCUMENT))
 
@@ -95,7 +91,7 @@ class EpubParserService:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(text)
             except IOError as e:
-                logging.error(f"Could not write to file {file_path}: {e}")
+                logger.error(f"Could not write to file {file_path}: {e}")
 
     def process_books(self):
         """Crawls the sources directory and processes all found books.
@@ -105,32 +101,32 @@ class EpubParserService:
         already been extracted, it orchestrates the parsing and saving of
         the chapter content.
         """
-        logging.info(f"Starting to process books in '{self.sources_dir}'")
+        logger.info(f"Starting to process books in '{self.sources_dir}'")
         for book_name in os.listdir(self.sources_dir):
             book_dir = os.path.join(self.sources_dir, book_name)
             if not os.path.isdir(book_dir):
                 continue
 
-            logging.info(f"Checking book: {book_name}")
+            logger.info(f"Checking book: {book_name}")
             epub_path = os.path.join(book_dir, 'book.epub')
             chapters_dir = os.path.join(book_dir, 'chapters')
 
             if os.path.exists(chapters_dir) and os.listdir(chapters_dir):
-                logging.info(f"Chapters already exist for '{book_name}', skipping.")
+                logger.info(f"Chapters already exist for '{book_name}', skipping.")
                 continue
 
             if not os.path.exists(epub_path):
-                logging.warning(f"'book.epub' not found in '{book_dir}', skipping.")
+                logger.warning(f"'book.epub' not found in '{book_dir}', skipping.")
                 continue
 
             try:
-                logging.info(f"Processing '{epub_path}'")
+                logger.info(f"Processing '{epub_path}'")
                 os.makedirs(chapters_dir, exist_ok=True)
                 book = epub.read_epub(epub_path)
                 self._extract_and_save_chapters(book, chapters_dir)
-                logging.info(f"Finished processing '{book_name}'.")
+                logger.info(f"Finished processing '{book_name}'.")
             except ebooklib.epub.EpubException as e:
-                logging.error(f"Failed to process '{book_name}': {e}")
+                logger.error(f"Failed to process '{book_name}': {e}")
 
 if __name__ == '__main__':
     # The script will look for books in the 'Sources' directory 

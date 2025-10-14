@@ -8,10 +8,7 @@ from openai import OpenAI
 
 import config
 
-# Set up basic logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logger = logging.getLogger(__name__)
 
 
 class LLMService:
@@ -99,7 +96,7 @@ class LLMService:
 
         if len(timestamps) >= config.RATE_LIMIT:
             wait_time = timestamps[0] - (now - config.RATE_LIMIT_PERIOD)
-            logging.warning(
+            logger.warning(
                 f"Rate limit for {provider['name']}'s client reached. "
                 f"Waiting for {wait_time:.2f} seconds."
             )
@@ -121,7 +118,7 @@ class LLMService:
         """
         try:
             self._rate_limit_wait(provider)
-            logging.info(
+            logger.info(
                 f"Attempting call to {provider['name']} with model {provider['model']}"
             )
 
@@ -136,7 +133,7 @@ class LLMService:
                 "model_name": provider["model"],
             }
         except OpenAI.APIError as e:
-            logging.error(f"API error calling {provider['name']}: {e}")
+            logger.error(f"API error calling {provider['name']}: {e}")
             return None
 
     def chat_completion(self, messages):
@@ -161,20 +158,20 @@ class LLMService:
             for attempt in range(config.MAX_RETRIES):
                 result = self._make_request(provider, messages)
                 if result:
-                    logging.info(
+                    logger.info(
                         f"Successfully received response from {provider['name']}."
                     )
                     return result
 
                 if attempt < config.MAX_RETRIES - 1:
                     backoff_time = config.INITIAL_BACKOFF * (2**attempt)
-                    logging.warning(
+                    logger.warning(
                         f"Attempt {attempt + 1} for {provider['name']} failed. "
                         f"Retrying in {backoff_time} seconds."
                     )
                     time.sleep(backoff_time)
 
-            logging.error(
+            logger.error(
                 f"All {config.MAX_RETRIES} retries for {provider['name']} failed. Moving to next provider."
             )
 
@@ -200,13 +197,13 @@ class LLMService:
 
 # Example usage
 if __name__ == "__main__":
-    logging.info("Starting LLM service example with sequential fallback.")
+    logger.info("Starting LLM service example with sequential fallback.")
     service = LLMService()
 
     try:
         # This will now try the whole sequence of models if failures occur
         result = service.generate_text("What is morality, and what is its origin?")
-        logging.info("LLM Response:")
+        logger.info("LLM Response:")
         print(result["content"])
     except OpenAI.APIError as e:
-        logging.error(f"Failed to get response from any LLM provider: {e}")
+        logger.error(f"Failed to get response from any LLM provider: {e}")
