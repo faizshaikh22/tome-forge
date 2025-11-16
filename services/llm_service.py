@@ -4,7 +4,7 @@ import time
 from collections import deque
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, APIError
 
 import config
 
@@ -132,8 +132,11 @@ class LLMService:
                 "provider_name": provider["name"],
                 "model_name": provider["model"],
             }
-        except OpenAI.APIError as e:
+        except APIError as e:
             logger.error(f"API error calling {provider['name']}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error calling {provider['name']}: {e}")
             return None
 
     def chat_completion(self, messages):
@@ -205,5 +208,5 @@ if __name__ == "__main__":
         result = service.generate_text("What is morality, and what is its origin?")
         logger.info("LLM Response:")
         print(result["content"])
-    except OpenAI.APIError as e:
+    except Exception as e:
         logger.error(f"Failed to get response from any LLM provider: {e}")

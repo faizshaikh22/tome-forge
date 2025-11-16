@@ -14,12 +14,7 @@ __pycache__/
 *.log
 
 # Test files
-test.epub
-test2.epub
-
-# Generated files
-# Sources/**/output/
-# Sources/**/chapters/
-
-# Factory configuration
-.factory/
+Sources/
+*.csv
+*.epub
+*.zip

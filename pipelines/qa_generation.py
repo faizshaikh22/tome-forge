@@ -47,9 +47,19 @@ def generate_qa_pairs_for_chapter(
                 qa_pairs = json.load(f)
             except json.JSONDecodeError:
                 qa_pairs = []
+    
+    # Calculate how many questions we still need
+    existing_count = len(qa_pairs)
+    remaining_questions = no_of_questions - existing_count
+    
+    if remaining_questions <= 0:
+        logger.info(f"Chapter already has {existing_count} Q&A pairs (target: {no_of_questions}). Skipping.")
+        return
+    
+    logger.info(f"Found {existing_count} existing Q&A pairs. Generating {remaining_questions} more to reach target of {no_of_questions}.")
 
     question_prompt = qa_prompts.get_question_generation_prompt(
-        chapter_name, book, author, no_of_questions
+        chapter_name, book, author, remaining_questions
     )
     questions_result = llm_function(question_prompt)
     questions_output = questions_result["content"]

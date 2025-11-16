@@ -28,12 +28,18 @@ The codebase is organized into a modular and maintainable structure:
 
 1.  **Setup:**
     -   Create a `.env` file in the root directory and add your API keys (e.g., `NIM_API_KEY="..."`).
-    -   Review `config.py` to customize the list of books to download or adjust generation parameters.
+    -   Review `config.py` to customize the pipeline:
+        -   **Books:** Modify `BOOKS_TO_DOWNLOAD` to add/remove Gutenberg IDs.
+        -   **Q&A Generation:** Adjust `TARGET_TOTAL_PAIRS`, `MIN_QUESTIONS_PER_CHAPTER`, `MAX_QUESTIONS_PER_CHAPTER`.
+        -   **LLM Settings:** Configure `RATE_LIMIT`, `MAX_RETRIES`, `TEMPERATURE`, and models (`NIM_MODELS`, `VC_MODEL`).
+        -   **Question Types:** Tune `QUESTION_LAYER_DISTRIBUTION` percentages (semantic, episodic, procedural, emotional, structural).
+        -   **LLM Provider:** To use a different OpenAI-compatible provider, modify `NIM_BASE_URL` and `VC_BASE_URL` in `config.py`, or add new client configurations in `services/llm_service.py` (lines 45-52).
 
-2.  **Download Books:**
+2.  **Download Books (Optional):**
     ```bash
     python services/book_downloader.py
     ```
+    *Alternatively, place `.epub` files manually in `Sources/<Book Name>/book.epub`.*
 
 3.  **Parse Chapters:**
     ```bash
@@ -46,7 +52,15 @@ The codebase is organized into a modular and maintainable structure:
     ```
     The generated JSON files will be placed in an `output` directory within each book's source folder.
 
-## Example Output
+5.  **Convert to Training Format:**
+    ```bash
+    python csv_to_qa_pair.py
+    ```
+    Set `with_thinking=True` for reasoning-enhanced format or `False` for simple Q&A pairs.
 
-For a concrete example of the generated data, see this file:
-[Beyond Good and Evil - Chapter I: Prejudices of Philosophers](./Sources/Beyond%20Good%20and%20Evil/output/000_chapter_i_prejudices_of_philosophers.json)
+## Example Data & Models
+
+-   **Dataset:** [Nietzsche Q&A Dataset on Hugging Face](https://huggingface.co/datasets/phase-shake/nietzsche)
+-   **Trained Models:**
+    -   [Nietzsche Gemma 3 4B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-4b-it-Q4_K_M-GGUF)
+    -   [Nietzsche Gemma 3 1B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-1b-it-Q4_K_M-GGUF)

@@ -6,18 +6,18 @@ PROGRESS_FILE = "_completed_chapters.log"
 AUTHOR = "Nietzsche"
 
 # --- Q&A Generation Parameters ---
-TARGET_TOTAL_PAIRS = 10000
+TARGET_TOTAL_PAIRS = 5000
 MIN_QUESTIONS_PER_CHAPTER = 10
 MAX_QUESTIONS_PER_CHAPTER = 100
 DEFAULT_QUESTIONS_PER_CHAPTER = 20
 
 # --- LLM Service Settings ---
 # Rate limiting
-RATE_LIMIT = 20
+RATE_LIMIT = 30
 RATE_LIMIT_PERIOD = 60  # in seconds
 
 # Retries and backoff
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 INITIAL_BACKOFF = 3  # seconds
 
 # Model temperature
@@ -28,9 +28,9 @@ NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
 VC_BASE_URL = "https://vanchin.streamlake.ai/api/gateway/v1/endpoints"
 
 NIM_MODELS = [
-    "openai/gpt-oss-120b",
     "moonshotai/kimi-k2-instruct-0905",
     "deepseek-ai/deepseek-v3.1-terminus",
+    "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
     "deepseek-ai/deepseek-r1-0528",
     "mistralai/mistral-nemotron",

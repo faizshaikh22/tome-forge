@@ -7,6 +7,21 @@ import config
 logger = logging.getLogger(__name__)
 
 
+def normalize_path(path):
+    """Normalizes a file path to use consistent separators.
+    
+    Converts all path separators to the OS-specific separator and
+    resolves the path to an absolute form.
+    
+    Args:
+        path: The file path to normalize.
+        
+    Returns:
+        A normalized absolute path string.
+    """
+    return os.path.abspath(os.path.normpath(path))
+
+
 def find_first_book_with_chapters(sources_dir=config.SOURCES_DIR):
     """Finds the first book with extracted chapter files.
 
@@ -53,14 +68,14 @@ def load_completed_chapters():
     """Reads the progress log file to determine which chapters are complete.
 
     Returns:
-        A set of strings, where each string is the JSON file path of a
+        A set of strings, where each string is the normalized JSON file path of a
         chapter that has already been successfully processed. Returns an
         empty set if the progress file does not exist.
     """
     if not os.path.exists(config.PROGRESS_FILE):
         return set()
     with open(config.PROGRESS_FILE, "r", encoding="utf-8") as f:
-        return {line.strip() for line in f}
+        return {normalize_path(line.strip()) for line in f if line.strip()}
 
 
 def log_completed_chapter(json_path):
@@ -69,8 +84,9 @@ def log_completed_chapter(json_path):
     Args:
         json_path: The file path of the successfully generated JSON file.
     """
+    normalized = normalize_path(json_path)
     with open(config.PROGRESS_FILE, "a", encoding="utf-8") as f:
-        f.write(json_path + "\n")
+        f.write(normalized + "\n")
 
 
 def get_chapter_stats(sources_dir: str = config.SOURCES_DIR) -> list[dict]:

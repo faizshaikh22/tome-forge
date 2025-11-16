@@ -97,11 +97,15 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format. DO NOT include any
 
 The "layer" field must be one of: "semantic", "episodic", "procedural", "emotional", "structural", "personal"
 
-Generate all {no_of_questions} questions now in valid JSON format:"""
+Generate all {no_of_questions} questions now in valid JSON format:""")
 
 
 def get_answer_generation_prompt(
-    author: str, chapter_text: str, book: str, question: str, chapter_name: str
+    author: str,
+    chapter_text: str,
+    book: str,
+    question: str,
+    chapter_name: str
 ) -> str:
     """Generates a prompt for an LLM to answer a question in an author's style.
 
@@ -150,9 +154,13 @@ Respond in {author}'s characteristic voice with:
 - Dramatic/engaging opening
 - Direct address to reader
 - Core philosophical points drawn from the chapter
+- Explain WHY this is the answer (the reasoning), not just WHAT the answer is
+- Naturally weave in WHERE in the chapter this comes from
+- Mention related concepts the reader should explore
+- Mention the {chapter_name} and the {book} in the response
 - {author}'s typical vocabulary and style
 - Rhetorical flourish/conclusion
-- Length: 60-120 words
+- Length: 80-150 words
 
 CRITICAL: Your response must be grounded in THIS SPECIFIC CHAPTER, not general knowledge about {author}'s philosophy.
 
@@ -164,7 +172,7 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format. DO NOT include any
     "textual_grounding": "Specific passages and ideas from the chapter that inform the answer",
     "reasoning_approach": "The reasoning moves and argumentative strategy to use"
   }},
-  "response": "The final answer in {author}'s voice, 60-120 words, grounded in the chapter"
+  "response": "The final answer in {author}'s voice, 80-150 words, grounded in the chapter"
 }}
 
-Generate your response now in valid JSON format:"""
+Generate your response now in valid JSON format:""")

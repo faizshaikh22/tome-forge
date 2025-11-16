@@ -56,10 +56,24 @@ def plan_generation_workload(all_chapter_stats, completed_chapters_set):
         chapter_name_base = os.path.splitext(chapter_info["filename"])[0]
         safe_chapter_name = "".join(c for c in chapter_name_base if c.isalnum() or c in "._- ")
         json_filename = f"{safe_chapter_name}.json"
-        json_path = os.path.join(output_dir, json_filename)
+        json_path = os.path.abspath(os.path.join(output_dir, json_filename))
 
+        # Check if chapter is already logged as complete
         if json_path in completed_chapters_set:
             continue
+        
+        # Check if JSON file already has enough Q&A pairs
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    existing_pairs = json.load(f)
+                    if len(existing_pairs) >= config.MIN_QUESTIONS_PER_CHAPTER:
+                        # Has enough pairs, mark as complete and skip
+                        logger.info(f"Chapter {chapter_info['filename']} already has {len(existing_pairs)} Q&A pairs. Skipping.")
+                        continue
+            except (json.JSONDecodeError, IOError):
+                # If we can't read it, we'll regenerate
+                pass
 
         scaling_factor = chapter_info["word_count"] / avg_word_count if avg_word_count > 0 else 1
         num_questions = round(baseline_questions * scaling_factor)
