@@ -64,3 +64,7 @@ The codebase is organized into a modular and maintainable structure:
 -   **Trained Models:**
     -   [Nietzsche Gemma 3 4B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-4b-it-Q4_K_M-GGUF)
     -   [Nietzsche Gemma 3 1B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-1b-it-Q4_K_M-GGUF)
+
+## Documentation & Support
+
+For in-depth understanding of the codebase or to ask questions, visit: [DeepWiki - Tome Forge](https://deepwiki.com/faizshaikh22/tome-forge)
