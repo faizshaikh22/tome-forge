@@ -64,7 +64,7 @@ The codebase is organized into a modular and maintainable structure:
 -   **Trained Models:**
     -   [Nietzsche Gemma 3 4B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-4b-it-Q4_K_M-GGUF)
     -   [Nietzsche Gemma 3 1B (Q4_K_M GGUF)](https://huggingface.co/phase-shake/nietzsche-gemma-3-1b-it-Q4_K_M-GGUF)
--   **Fine-tuning Code:** [Fine-tune Gemma 3 4B on Google Colab](https://colab.research.google.com/drive/14HRPIjUbhi3oYnE5z_Ujk0TPhsa3gKaQ?usp=sharing) or see `nietzchegemma.ipynb` in this repository
+-   **Fine-tuning Code:** [Fine-tune Gemma 3 4B on Google Colab](https://colab.research.google.com/drive/14HRPIjUbhi3oYnE5z_Ujk0TPhsa3gKaQ?usp=sharing) or see [`nietzchegemma.ipynb`](./nietzchegemma.ipynb) in this repository
 
 ## Documentation & Support
 
